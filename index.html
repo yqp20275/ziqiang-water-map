@@ -52,14 +52,11 @@
             bounds.push([lat, lng]);
 
             const popupContent = `
-              <div style="font-size:14px; line-height:1.5;">
-                <b style="font-size:16px; color:#0284c7;">${item.name || '未命名站點'}</b><br>
-                <b>類型：</b>${item.type || '未標註'}<br>
-                <b>水溫：</b>${item.water_temp || '一般'}<br>
-                <b>開放時間：</b>${item.hours || '依現場公告'}<br>
-                <b>冷氣開放：</b>${item.has_ac || '無'}
-              </div>
-            `;
+  <div style="font-size: 14px; line-height: 1.6; padding: 2px;">
+    <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
+    <b>類型：</b>${item.type || '一般站點'}
+  </div>
+`;
 
             L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
           }
