@@ -51,10 +51,18 @@
             count++;
             bounds.push([lat, lng]);
 
+            const formattedHours = item.hours ? item.hours.replace(/\n/g, '<br>') : '依現場公告';
+            
             const popupContent = `
-            <div style="font-size: 14px; line-height: 1.6; padding: 2px;">
+            <div style="font-size: 14px; line-height: 1.5; min-width: 160px;">
             <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
-            <b>類型：</b>${item.type || '一般站點'}
+            <div style="margin-top: 6px;">
+            <b>類型：</b>${item.type || '一般站點'}<br>
+            <b>開放時間：</b><br>
+            <div style="color: #444; margin-top: 2px; line-height: 1.4;">
+            ${formattedHours}
+            </div>
+            </div>
             </div>
             `;
 
