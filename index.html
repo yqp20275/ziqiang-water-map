@@ -52,11 +52,11 @@
             bounds.push([lat, lng]);
 
             const popupContent = `
-  <div style="font-size: 14px; line-height: 1.6; padding: 2px;">
-    <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
-    <b>類型：</b>${item.type || '一般站點'}
-  </div>
-`;
+            <div style="font-size: 14px; line-height: 1.6; padding: 2px;">
+            <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
+            <b>類型：</b>${item.type || '一般站點'}
+            </div>
+            `;
 
             L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
           }
