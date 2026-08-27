@@ -8,65 +8,107 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
-    body { margin: 0; padding: 0; font-family: sans-serif; }
-    #header { padding: 10px 15px; background: #0284c7; color: white; text-align: center; }
-    #map { height: calc(100vh - 60px); width: 100vw; }
-    #status { position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; z-index: 1000; }
+    body { 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+    }
+    #header { 
+      padding: 12px 15px; 
+      background: #0284c7; 
+      color: white; 
+      text-align: center; 
+    }
+    #map { 
+      height: calc(100vh - 55px); 
+      width: 100vw; 
+    }
+    #status { 
+      position: fixed; 
+      bottom: 12px; 
+      left: 12px; 
+      background: rgba(0,0,0,0.75); 
+      color: white; 
+      padding: 6px 12px; 
+      border-radius: 6px; 
+      font-size: 13px; 
+      z-index: 1000; 
+    }
+    .water-marker {
+      background-color: #0284c7;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      font-size: 16px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <div id="header">
-    <h2 style="margin:0; font-size: 1.1rem;">板橋自強里 社區飲水地圖 💧</h2>
+    <h2 style="margin:0; font-size: 1.1rem; font-weight: 600;">板橋自強里 社區補水地圖 💧</h2>
   </div>
   <div id="map"></div>
   <div id="status">正在載入點位資料...</div>
 
   <script>
-    // 建立地圖，預設中心在板橋自強里辦公室
-    const map = L.map('map').setView([25.012987220599232, 121.45514270347937], 16);
+    // 地圖預設中心：板橋自強里辦公處
+    const map = L.map('map').setView([25.012805063786022, 121.45516286724622], 16);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap 貢獻者'
     }).addTo(map);
 
-    // 請替換為你的 Google 試算表 CSV 發布網址
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pub?output=csv'; 
+    // 水滴圖標
+    const waterIcon = L.divIcon({
+      className: 'custom-water-pin',
+      html: `<div class="water-marker">💧</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -18]
+    });
+
+    // Google 試算表 CSV 發布網址
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pub?output=csv';
 
     Papa.parse(csvUrl, {
       download: true,
       header: true,
       skipEmptyLines: true,
-      transformHeader: h => h.trim().toLowerCase(), // 自動去除欄位名稱前後空格並轉小寫
+      transformHeader: h => h.trim().toLowerCase(),
       complete: function(results) {
-        console.log("讀取到的資料內容：", results.data);
         let count = 0;
-        const bounds = [];
 
         results.data.forEach(item => {
-          // 清理經緯度資料中的空格
           const lat = parseFloat(item.lat ? item.lat.toString().trim() : NaN);
           const lng = parseFloat(item.lng ? item.lng.toString().trim() : NaN);
 
           if (!isNaN(lat) && !isNaN(lng)) {
             count++;
-            bounds.push([lat, lng]);
 
             const formattedHours = item.hours ? item.hours.replace(/\n/g, '<br>') : '依現場公告';
-            
+
             const popupContent = `
-            <div style="font-size: 14px; line-height: 1.5; min-width: 160px;">
-            <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
-            <div style="margin-top: 6px;">
-            <b>類型：</b>${item.type || '一般站點'}<br>
-            <b>開放時間：</b><br>
-            <div style="color: #444; margin-top: 2px; line-height: 1.4;">
-            ${formattedHours}
-            </div>
-            </div>
-            </div>
+              <div style="font-size: 14px; line-height: 1.5; min-width: 160px;">
+                <b style="font-size: 16px; color: #0284c7;">${item.name || '未命名站點'}</b><br>
+                <div style="margin-top: 6px;">
+                  <b>類型：</b>${item.type || '一般站點'}<br>
+                  <b>開放時間：</b><br>
+                  <div style="color: #444; margin-top: 2px; line-height: 1.4;">
+                    ${formattedHours}
+                  </div>
+                </div>
+              </div>
             `;
 
-            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+            L.marker([lat, lng], { icon: waterIcon })
+              .addTo(map)
+              .bindPopup(popupContent);
           }
         });
 
@@ -74,18 +116,12 @@
         if (count > 0) {
           statusDiv.innerText = `已成功載入 ${count} 個飲水點`;
           setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-          
-          // 自動將地圖縮放到包含所有點位的範圍
-          if (bounds.length > 0) {
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
-          }
         } else {
-          statusDiv.innerHTML = '<span style="color:#ff6b6b;">⚠️ 未找到有效經緯度資料，請檢查試算表欄位！</span>';
+          statusDiv.innerHTML = '<span style="color:#ff6b6b;">⚠️ 未找到有效經緯度資料</span>';
         }
       },
       error: function(err) {
-        console.error("讀取失敗：", err);
-        document.getElementById('status').innerHTML = '<span style="color:#ff6b6b;">⚠️ 資料載入失敗，請確認試算表已發布為 CSV</span>';
+        document.getElementById('status').innerHTML = '<span style="color:#ff6b6b;">⚠️ 資料載入失敗</span>';
       }
     });
   </script>
