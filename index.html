@@ -19,7 +19,6 @@
       overflow: hidden;
     }
 
-    /* 頂部導覽列與數據資訊 */
     #header-container {
       background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
       color: white;
@@ -143,11 +142,8 @@
       margin-top: 8px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
-    .nav-btn:hover {
-      background-color: #0369a1;
-    }
 
-    /* 懸浮按鈕群 (右下角) */
+    /* 懸浮按鈕群 */
     .fab-container {
       position: fixed;
       right: 16px;
@@ -172,9 +168,7 @@
       color: #0284c7;
       transition: transform 0.15s;
     }
-    .fab-btn:active {
-      transform: scale(0.92);
-    }
+    .fab-btn:active { transform: scale(0.92); }
     .fab-btn.report-btn {
       background-color: #0284c7;
       color: white;
@@ -197,7 +191,6 @@
 </head>
 <body>
 
-  <!-- 頂部即時氣象與瀏覽統計 -->
   <div id="header-container">
     <div class="header-title">
       <span>板橋自強里 社區補水地圖 💧</span>
@@ -221,14 +214,13 @@
   <div id="map"></div>
   <div id="status">正在載入飲水點位...</div>
 
-  <!-- 懸浮按鈕：GPS 定位 & 回報站點 -->
   <div class="fab-container">
     <button class="fab-btn" id="gps-btn" title="定位我的位置">🎯</button>
     <a class="fab-btn report-btn" href="https://forms.google.com" target="_blank" title="推薦或回報站點">➕</a>
   </div>
 
   <script>
-    // 1. ⏱️ 停留時間計時器
+    // 1. 計時器
     let totalSeconds = 0;
     setInterval(() => {
       totalSeconds++;
@@ -237,7 +229,7 @@
       document.getElementById('stay-timer').innerText = `${mins}:${secs}`;
     }, 1000);
 
-    // 2. 👁️ 累積瀏覽人次計數
+    // 2. 瀏覽計數
     fetch('https://api.counterapi.dev/v1/ziqiang_water_map_bt/visits/up')
       .then(res => res.json())
       .then(data => {
@@ -246,76 +238,70 @@
         }
       })
       .catch(() => {
-        let localVisits = parseInt(localStorage.getItem('ziqiang_map_views') || '135', 10) + 1;
+        let localVisits = parseInt(localStorage.getItem('ziqiang_map_views') || '150', 10) + 1;
         localStorage.setItem('ziqiang_map_views', localVisits);
         document.getElementById('view-count').innerText = localVisits.toLocaleString();
       });
 
-    // 3. 🗺️ 定義 4 種精美免費底圖
-    const googleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    // 3. 🗺️ 三種精美無浮水印底圖
+    const googleLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
       attribution: '© Google Maps',
       maxZoom: 20
     });
 
-    const taiwanEMap = L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
+    const emapLayer = L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
       attribution: '© 內政部國土測繪中心',
       maxZoom: 20
     });
 
-    const osmHot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    const hotLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap HOT',
       maxZoom: 19
     });
 
-    const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '© Esri Topo Map',
-      maxZoom: 19
-    });
-
-    // 4. 初始化地圖（預設使用 Google Maps 經典底圖）
+    // 4. 初始化地圖（預設使用 Google 地圖）
     const map = L.map('map', { 
-      layers: [googleMap],
+      layers: [googleLayer],
       zoomControl: false 
-    }).setView([25.0121, 121.4553], 17);
+    }).setView([25.0123, 121.4558], 16.5);
 
-    // 縮放按鈕
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // 🎨 右上角底圖切換選單
-    const baseMaps = {
-      "🗺️ Google 經典街道": googleMap,
-      "🇹🇼 臺灣通用電子圖 (門牌超清楚)": taiwanEMap,
-      "🎨 清新粉彩風格 (OSM HOT)": osmHot,
-      "🌿 柔和地形風格 (ESRI)": esriTopo
+    // 右上角圖層切換控制面板
+    const baseLayers = {
+      "🗺️ Google 經典街道": googleLayer,
+      "🇹🇼 臺灣通用電子圖 (詳細門牌)": emapLayer,
+      "🎨 清新粉彩風格 (OSM HOT)": hotLayer
     };
-    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    L.control.layers(baseLayers, null, { position: 'topright', collapsed: false }).addTo(map);
 
-    // 5. 自強里精準邊界多邊形
+     // 5. 自強里精準邊界多邊形
     const ziqiangBoundary = [
-      [25.01365, 121.45395], // 西北角：大智街 25 巷底
-      [25.01350, 121.45510], // 北界：沿大智街 25 巷向東
-      [25.01410, 121.45535], // 北界：往北折至大智街口
-      [25.01395, 121.45675], // 北界：沿大智街向東至中正路口
-      [25.01385, 121.45680], // 東北角：中正路與大智街口
-      [25.01235, 121.45635], // 東界：沿中正路西側（德昇中醫前）
-      [25.01120, 121.45595], // 東界：沿中正路西側（運動場對側）
-      [25.01045, 121.45565], // 東南角：中正路與中正路 1 巷口
-      [25.00995, 121.45460], // 南界：中正路 1 巷底（近西門街/林家花園北側）
-      [25.01130, 121.45420], // 西界：沿自強新村西緣往北
-      [25.01260, 121.45400], // 西界：沿光華街 39 巷後方巷弄
-      [25.01365, 121.45395]  // 閉合回西北起點
+      [25.01492543332093, 121.45376879794458], // 西北角：大智街 25 巷底
+      [25.014818394251606, 121.45449897072056], // 北界：沿大智街 25 巷向東
+      [25.014779467917265, 121.45511102909516], // 北界：往北折至大智街口
+      [25.015013004361556, 121.45517546201685], // 北界：沿大智街向東至中正路口
+      [25.014773867493734, 121.45651766099049], // 東北角：中正路與大智街口
+      [25.013017178725384, 121.45630627232694], // 東界：沿中正路西側（德昇中醫前）
+      [25.01256528447866, 121.45624182188611], // 東界：沿中正路西側（運動場對側）
+      [25.012003626286855, 121.45615181643166], // 東南角：中正路與中正路 1 巷口
+      [25.01173477007199, 121.45547366307223], // 南界：中正路 1 巷底（近西門街/林家花園北側）
+      [25.01131043147333, 121.45474108850364], // 南西界：中正路 1 巷底和光華街44巷交叉口）
+      [25.01209403781821, 121.45439102301961], // 西界：沿自強新村西緣往北
+      [25.01413254137745, 121.45367424668736], // 西界：沿光華街 39 巷後方巷弄
+      [25.01492543332093, 121.45376879794458]  // 閉合回西北起點
     ];
 
     L.polygon(ziqiangBoundary, {
       color: '#0284c7',
-      weight: 3,
-      opacity: 0.9,
+      weight: 3.5,
+      opacity: 0.95,
       fillColor: '#38bdf8',
-      fillOpacity: 0.18,
-      dashArray: '5, 5'
+      fillOpacity: 0.16,
+      dashArray: '6, 6'
     }).addTo(map).bindTooltip("📍 板橋區 自強里生活圈", { sticky: true, direction: 'center' });
 
-    // 6. 💧 水滴圖示（純 Emoji + 呼吸波紋）
+    // 6. 💧 水滴圖示
     const pulseWaterIcon = L.divIcon({
       className: 'water-div-marker',
       html: `
@@ -329,7 +315,7 @@
       popupAnchor: [0, -16]
     });
 
-    // 7. 串接 Open-Meteo 免費氣象 API
+    // 7. 即時氣溫 API
     fetch('https://api.open-meteo.com/v1/forecast?latitude=25.0128&longitude=121.4552&current=temperature_2m')
       .then(res => res.json())
       .then(data => {
@@ -350,7 +336,7 @@
         `;
       });
 
-    // 8. 讀取 Google 試算表 CSV 資料庫
+    // 8. 讀取 Google 試算表 CSV
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pub?output=csv';
 
     Papa.parse(csvUrl, {
@@ -367,7 +353,6 @@
 
           if (!isNaN(lat) && !isNaN(lng)) {
             count++;
-
             const formattedHours = item.hours ? item.hours.replace(/\n/g, '<br>') : '依現場公告';
             
             const typeText = item.type || '';
@@ -412,7 +397,7 @@
       }
     });
 
-    // 9. GPS 定位功能
+    // 9. GPS 定位
     let userMarker = null;
     const gpsBtn = document.getElementById('gps-btn');
 
