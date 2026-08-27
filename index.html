@@ -205,7 +205,6 @@
     <div class="weather-bar" id="weather-text">
       <span>🌤️ 載入即時天氣中...</span>
     </div>
-    <!-- 📊 瀏覽人次與停留時間顯示列 -->
     <div class="stats-bar">
       <div class="stats-item">
         <span>👁️ 累積瀏覽：</span>
@@ -229,7 +228,7 @@
   </div>
 
   <script>
-    // 1. ⏱️ 停留時間計時器 (每秒即時更新)
+    // 1. 停留時間計時器
     let totalSeconds = 0;
     setInterval(() => {
       totalSeconds++;
@@ -238,7 +237,7 @@
       document.getElementById('stay-timer').innerText = `${mins}:${secs}`;
     }, 1000);
 
-    // 2. 👁️ 免費 Counter API 累積瀏覽人次計數
+    // 2. 累積瀏覽人次
     fetch('https://api.counterapi.dev/v1/ziqiang_water_map_bt/visits/up')
       .then(res => res.json())
       .then(data => {
@@ -247,58 +246,46 @@
         }
       })
       .catch(() => {
-        // 若 API 暫時無法連線，使用本地累積次數防呆機制
         let localVisits = parseInt(localStorage.getItem('ziqiang_map_views') || '120', 10) + 1;
         localStorage.setItem('ziqiang_map_views', localVisits);
         document.getElementById('view-count').innerText = localVisits.toLocaleString();
       });
 
-    // 3. 初始化地圖
-    const map = L.map('map', { zoomControl: false }).setView([25.0124, 121.4562], 16.5);
+    // 3. 初始化地圖（中心精確對準自強新村）
+    const map = L.map('map', { zoomControl: false }).setView([25.0125, 121.4558], 16.5);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // 4. Voyager 清新彩色底圖
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap 貢獻者 © CARTO',
-      subdomains: 'abcd',
+    // 4. 使用免費無浮水印的 OpenStreetMap 標準圖資
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap 貢獻者',
       maxZoom: 19
     }).addTo(map);
 
-    // 3. 自強里精準邊界多邊形（依據衛星圖紅框節點繪製）
+    // 5. 自強里精準邊界多邊形（貼齊中正路、中正路1巷、大智街與光華街後方）
     const ziqiangBoundary = [
-      // 西北角起點：大智街 25 巷後方與光華街交界處
-      [25.01405, 121.45390],
-      // 北界：沿大智街 25 巷向東
-      [25.01375, 121.45520],
-      // 北界：向上折角銜接至大智街（近大智街 24 巷口）
-      [25.01438, 121.45575],
-      // 北界：沿大智街向東延伸至中正路
-      [25.01380, 121.45735],
-      // 東北角：大智街與中正路交叉口
-      [25.01365, 121.45748],
-      // 東界：沿中正路一路往南（經德昇中醫診所、正對板橋第二運動場）
-      [25.01220, 121.45700],
-      [25.01085, 121.45655],
-      // 東南轉折點：中正路與中正路 1 巷路口
-      [25.00985, 121.45510],
-      // 南界端點：中正路 1 巷底、西門街與林本源園邸北側
-      [25.00925, 121.45415],
-      // 西界：沿光華街後方直線往西北切回起點
-      [25.01065, 121.45370],
-      [25.01210, 121.45365],
-      [25.01330, 121.45375],
-      [25.01405, 121.45390] // 閉合多邊形
+      [25.01412, 121.45798], // 東北角：大智街與中正路交叉口
+      [25.01250, 121.45745], // 東側：中正路（德昇中醫診所前）
+      [25.01150, 121.45715], // 東側：中正路（第二運動場正對面）
+      [25.01048, 121.45678], // 東南角：中正路與中正路 1 巷交叉口
+      [25.00975, 121.45485], // 南界：中正路 1 巷底（近西門街/林本源園邸北側）
+      [25.01095, 121.45435], // 西南側：自強新村南側後巷
+      [25.01245, 121.45400], // 西界：光華街 39 巷後方巷弄
+      [25.01372, 121.45390], // 西北角：大智街 25 巷底
+      [25.01375, 121.45545], // 北界：沿大智街 25 巷往東
+      [25.01420, 121.45575], // 北界：折角銜接至大智街
+      [25.01415, 121.45720], // 北界：沿大智街往東
+      [25.01412, 121.45798]  // 閉合回東北角
     ];
 
     L.polygon(ziqiangBoundary, {
       color: '#0284c7',
-      weight: 3,
+      weight: 2.5,
       opacity: 0.9,
       fillColor: '#38bdf8',
-      fillOpacity: 0.16,
-      dashArray: '6, 6'
+      fillOpacity: 0.15,
+      dashArray: '5, 5'
     }).addTo(map).bindTooltip("📍 板橋區 自強里", { sticky: true, direction: 'center' });
-    
+
     // 6. 💧 水滴圖示（純 Emoji + 呼吸波紋）
     const pulseWaterIcon = L.divIcon({
       className: 'water-div-marker',
@@ -313,7 +300,7 @@
       popupAnchor: [0, -16]
     });
 
-    // 7. 串接 Open-Meteo 免費氣象 API
+    // 7. 即時氣象串接
     fetch('https://api.open-meteo.com/v1/forecast?latitude=25.0128&longitude=121.4552&current=temperature_2m')
       .then(res => res.json())
       .then(data => {
