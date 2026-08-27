@@ -147,7 +147,7 @@
       background-color: #0369a1;
     }
 
-    /* 懸浮按鈕群 */
+    /* 懸浮按鈕群 (右下角) */
     .fab-container {
       position: fixed;
       right: 16px;
@@ -228,7 +228,7 @@
   </div>
 
   <script>
-    // 1. 停留時間計時器
+    // 1. ⏱️ 停留時間計時器
     let totalSeconds = 0;
     setInterval(() => {
       totalSeconds++;
@@ -237,7 +237,7 @@
       document.getElementById('stay-timer').innerText = `${mins}:${secs}`;
     }, 1000);
 
-    // 2. 累積瀏覽人次計數
+    // 2. 👁️ 累積瀏覽人次計數
     fetch('https://api.counterapi.dev/v1/ziqiang_water_map_bt/visits/up')
       .then(res => res.json())
       .then(data => {
@@ -251,29 +251,57 @@
         document.getElementById('view-count').innerText = localVisits.toLocaleString();
       });
 
-    // 3. 初始化地圖（中心鎖定自強新村與中正路25巷口）
-    const map = L.map('map', { zoomControl: false }).setView([25.0121, 121.4553], 17);
+    // 3. 🗺️ 定義 4 種精美免費底圖
+    const googleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      attribution: '© Google Maps',
+      maxZoom: 20
+    });
+
+    const taiwanEMap = L.tileLayer('https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', {
+      attribution: '© 內政部國土測繪中心',
+      maxZoom: 20
+    });
+
+    const osmHot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap HOT',
+      maxZoom: 19
+    });
+
+    const esriTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri Topo Map',
+      maxZoom: 19
+    });
+
+    // 4. 初始化地圖（預設使用 Google Maps 經典底圖）
+    const map = L.map('map', { 
+      layers: [googleMap],
+      zoomControl: false 
+    }).setView([25.0121, 121.4553], 17);
+
+    // 縮放按鈕
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // 4. 清新風格底圖（CartoDB Positron 簡約純淨版，完全免費且無浮水印）
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap 貢獻者 © CARTO',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
+    // 🎨 右上角底圖切換選單
+    const baseMaps = {
+      "🗺️ Google 經典街道": googleMap,
+      "🇹🇼 臺灣通用電子圖 (門牌超清楚)": taiwanEMap,
+      "🎨 清新粉彩風格 (OSM HOT)": osmHot,
+      "🌿 柔和地形風格 (ESRI)": esriTopo
+    };
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
-    // 5. 自強里真正精準邊界（嚴格貼齊中正路西側，排除運動場與林家花園）
+    // 5. 自強里精準邊界多邊形
     const ziqiangBoundary = [
-      [25.01365, 121.45395], // 西北角：大智街 25 巷底（近光華街後巷）
+      [25.01365, 121.45395], // 西北角：大智街 25 巷底
       [25.01350, 121.45510], // 北界：沿大智街 25 巷向東
-      [25.01410, 121.45535], // 北界：往北折至大智街口（近大智街24巷對面）
+      [25.01410, 121.45535], // 北界：往北折至大智街口
       [25.01395, 121.45675], // 北界：沿大智街向東至中正路口
       [25.01385, 121.45680], // 東北角：中正路與大智街口
-      [25.01235, 121.45635], // 東界：沿中正路西側（德昇中醫診所前，體育館正對面）
-      [25.01120, 121.45595], // 東界：沿中正路西側（第二運動場正對面）
-      [25.01045, 121.45565], // 東南角：中正路與中正路 1 巷交叉口（公館街對側）
-      [25.00995, 121.45460], // 南界：沿中正路 1 巷斜切至西門街口（林家花園北圍牆外）
-      [25.01130, 121.45420], // 西界：沿自強新村西緣（光華街 37 巷後方）往北
+      [25.01235, 121.45635], // 東界：沿中正路西側（德昇中醫前）
+      [25.01120, 121.45595], // 東界：沿中正路西側（運動場對側）
+      [25.01045, 121.45565], // 東南角：中正路與中正路 1 巷口
+      [25.00995, 121.45460], // 南界：中正路 1 巷底（近西門街/林家花園北側）
+      [25.01130, 121.45420], // 西界：沿自強新村西緣往北
       [25.01260, 121.45400], // 西界：沿光華街 39 巷後方巷弄
       [25.01365, 121.45395]  // 閉合回西北起點
     ];
@@ -301,7 +329,7 @@
       popupAnchor: [0, -16]
     });
 
-    // 7. 即時氣象串接
+    // 7. 串接 Open-Meteo 免費氣象 API
     fetch('https://api.open-meteo.com/v1/forecast?latitude=25.0128&longitude=121.4552&current=temperature_2m')
       .then(res => res.json())
       .then(data => {
