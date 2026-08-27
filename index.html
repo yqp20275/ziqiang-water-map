@@ -251,17 +251,17 @@
         document.getElementById('view-count').innerText = localVisits.toLocaleString();
       });
 
-    // 3. 初始化地圖（中心精確對準自強新村）
-    const map = L.map('map', { zoomControl: false }).setView([25.0125, 121.4558], 16.5);
+    // 3. 初始化地圖
+    const map = L.map('map', { zoomControl: false }).setView([25.0124, 121.4558], 16.5);
     L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // 4. 使用免費無浮水印的 OpenStreetMap 標準圖資
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap 貢獻者',
+    // 4. 清新粉彩風格底圖（完全免費、無浮水印、高解析）
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '© Esri, HERE, Garmin, USGS, OpenStreetMap',
       maxZoom: 19
     }).addTo(map);
 
-    // 5. 自強里精準邊界多邊形（貼齊中正路、中正路1巷、大智街與光華街後方）
+    // 5. 自強里精準邊界多邊形
     const ziqiangBoundary = [
       [25.01412, 121.45798], // 東北角：大智街與中正路交叉口
       [25.01250, 121.45745], // 東側：中正路（德昇中醫診所前）
