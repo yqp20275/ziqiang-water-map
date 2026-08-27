@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>板橋區自強里 飲水地圖</title>
-  <!-- Leaflet 地圖樣式庫 -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -12,6 +11,7 @@
     body { margin: 0; padding: 0; font-family: sans-serif; }
     #header { padding: 10px 15px; background: #0284c7; color: white; text-align: center; }
     #map { height: calc(100vh - 60px); width: 100vw; }
+    #status { position: fixed; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; z-index: 1000; }
   </style>
 </head>
 <body>
@@ -19,37 +19,68 @@
     <h2 style="margin:0; font-size: 1.1rem;">板橋自強里 社區飲水地圖 💧</h2>
   </div>
   <div id="map"></div>
+  <div id="status">正在載入點位資料...</div>
 
   <script>
-    // 設定地圖中心為自強里辦公室 (新北市板橋區自強里中正路25巷1-23)
-    const map = L.map('map').setView([25.013638578616096, 121.45509436719533], 16);
+    // 建立地圖，預設中心在板橋自強里辦公室
+    const map = L.map('map').setView([25.012987220599232, 121.45514270347937], 16);
 
-    // 載入免費 OpenStreetMap 圖資
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap 貢獻者'
     }).addTo(map);
 
-    // 讀取 Google 試算表 CSV 資料
-    const csvUrl = 'YOUR_CSV_URL_HERE'; // https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pubhtml
+    // 請替換為你的 Google 試算表 CSV 發布網址
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pubhtml'; 
 
     Papa.parse(csvUrl, {
       download: true,
       header: true,
+      skipEmptyLines: true,
+      transformHeader: h => h.trim().toLowerCase(), // 自動去除欄位名稱前後空格並轉小寫
       complete: function(results) {
+        console.log("讀取到的資料內容：", results.data);
+        let count = 0;
+        const bounds = [];
+
         results.data.forEach(item => {
-          if (item.lat && item.lng) {
+          // 清理經緯度資料中的空格
+          const lat = parseFloat(item.lat ? item.lat.toString().trim() : NaN);
+          const lng = parseFloat(item.lng ? item.lng.toString().trim() : NaN);
+
+          if (!isNaN(lat) && !isNaN(lng)) {
+            count++;
+            bounds.push([lat, lng]);
+
             const popupContent = `
-              <b>${item.name}</b><br>
-              類型：${item.type}<br>
-              水溫：${item.water_temp}<br>
-              開放時間：${item.hours}<br>
-              室內冷氣：${item.has_ac}
+              <div style="font-size:14px; line-height:1.5;">
+                <b style="font-size:16px; color:#0284c7;">${item.name || '未命名站點'}</b><br>
+                <b>類型：</b>${item.type || '未標註'}<br>
+                <b>水溫：</b>${item.water_temp || '一般'}<br>
+                <b>開放時間：</b>${item.hours || '依現場公告'}<br>
+                <b>冷氣開放：</b>${item.has_ac || '無'}
+              </div>
             `;
-            L.marker([parseFloat(item.lat), parseFloat(item.lng)])
-              .addTo(map)
-              .bindPopup(popupContent);
+
+            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
           }
         });
+
+        const statusDiv = document.getElementById('status');
+        if (count > 0) {
+          statusDiv.innerText = `已成功載入 ${count} 個飲水點`;
+          setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
+          
+          // 自動將地圖縮放到包含所有點位的範圍
+          if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 17 });
+          }
+        } else {
+          statusDiv.innerHTML = '<span style="color:#ff6b6b;">⚠️ 未找到有效經緯度資料，請檢查試算表欄位！</span>';
+        }
+      },
+      error: function(err) {
+        console.error("讀取失敗：", err);
+        document.getElementById('status').innerHTML = '<span style="color:#ff6b6b;">⚠️ 資料載入失敗，請確認試算表已發布為 CSV</span>';
       }
     });
   </script>
