@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>板橋區自強里 飲水地圖</title>
+  <!-- Leaflet 地圖樣式庫 -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; font-family: sans-serif; }
+    #header { padding: 10px 15px; background: #0284c7; color: white; text-align: center; }
+    #map { height: calc(100vh - 60px); width: 100vw; }
+  </style>
+</head>
+<body>
+  <div id="header">
+    <h2 style="margin:0; font-size: 1.1rem;">板橋自強里 社區飲水地圖 💧</h2>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    // 設定地圖中心為自強里辦公室 (新北市板橋區自強里中正路25巷1-23)
+    const map = L.map('map').setView([25.013638578616096, 121.45509436719533], 16);
+
+    // 載入免費 OpenStreetMap 圖資
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap 貢獻者'
+    }).addTo(map);
+
+    // 讀取 Google 試算表 CSV 資料
+    const csvUrl = 'YOUR_CSV_URL_HERE'; // https://docs.google.com/spreadsheets/d/e/2PACX-1vR62aC6cNPZACstwxlvktY7ax1ocm84tf80z-f_5PiAhdxsNReHkpW2uvdeuVLjF-lL5va6D9FxLVYb/pubhtml
+
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        results.data.forEach(item => {
+          if (item.lat && item.lng) {
+            const popupContent = `
+              <b>${item.name}</b><br>
+              類型：${item.type}<br>
+              水溫：${item.water_temp}<br>
+              開放時間：${item.hours}<br>
+              室內冷氣：${item.has_ac}
+            `;
+            L.marker([parseFloat(item.lat), parseFloat(item.lng)])
+              .addTo(map)
+              .bindPopup(popupContent);
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
