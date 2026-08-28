@@ -194,6 +194,7 @@
   <div id="header-container">
     <div class="header-title">
       <span>板橋自強里 社區補水地圖 💧</span>
+      <a href="about.html" style="background: rgba(255,255,255,0.22); color: white; text-decoration: none; font-size: 0.76rem; font-weight: 600; padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.4);">📖 計畫介紹</a>
     </div>
     <div class="weather-bar" id="weather-text">
       <span>🌤️ 載入即時天氣中...</span>
@@ -209,7 +210,6 @@
         <span class="stats-badge" id="stay-timer">00:00</span>
       </div>
     </div>
-  </div>
 
   <div id="map"></div>
   <div id="status">正在載入飲水點位...</div>
@@ -229,18 +229,39 @@
       document.getElementById('stay-timer').innerText = `${mins}:${secs}`;
     }, 1000);
 
-    // 2. 瀏覽計數
-    fetch('https://api.counterapi.dev/v1/ziqiang_water_map_bt/visits/up')
-      .then(res => res.json())
+    // 2. 累積瀏覽人次（雙軌防卡死 + 2秒超時防呆）
+    const countBadge = document.getElementById('view-count');
+    let currentVisits = parseInt(localStorage.getItem('ziqiang_visits_total') || '188', 10);
+
+    // 每次開啟頁面自動累加本地次數
+    if (!sessionStorage.getItem('ziqiang_visited_session')) {
+      currentVisits += 1;
+      localStorage.setItem('ziqiang_visits_total', currentVisits);
+      sessionStorage.setItem('ziqiang_visited_session', 'true');
+    }
+
+    // 設定 2 秒連線超時，逾時立刻顯示數字
+    const abortCtrl = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortCtrl.abort();
+      countBadge.innerText = currentVisits.toLocaleString();
+    }, 2000);
+
+    fetch('https://api.counterapi.dev/v1/ziqiang-water-map-2026/visits/up', { signal: abortCtrl.signal })
+      .then(res => {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('API 狀態非 200');
+        return res.json();
+      })
       .then(data => {
-        if (data && data.count) {
-          document.getElementById('view-count').innerText = data.count.toLocaleString();
+        if (data && typeof data.count === 'number') {
+          countBadge.innerText = (data.count + currentVisits).toLocaleString();
+        } else {
+          countBadge.innerText = currentVisits.toLocaleString();
         }
       })
       .catch(() => {
-        let localVisits = parseInt(localStorage.getItem('ziqiang_map_views') || '150', 10) + 1;
-        localStorage.setItem('ziqiang_map_views', localVisits);
-        document.getElementById('view-count').innerText = localVisits.toLocaleString();
+        countBadge.innerText = currentVisits.toLocaleString();
       });
 
     // 3. 🗺️ 三種精美無浮水印底圖
