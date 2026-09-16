@@ -45,6 +45,114 @@
     }
 
     /* 主內容容器 */
+    main {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* 通用卡片外框 */
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 💡 新增的靜態地圖圖片樣式 */
+    .map-image-wrapper {
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      background-color: #f1f5f9;
+    }
+
+    .map-image {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .map-note {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    /* 核心理念三大標籤格 */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .feature-item {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .feature-item h3 {
+      font-size: 1rem;
+      color: #0284c7;
+      margin-bottom: 8px;
+    }
+
+    .feature-item p {
+      font-size: 0.9rem;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+
+    /* 頂部導覽列 */
+    header {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .back-btn {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* 主內容容器 */
     .container {
       max-width: 900px;
       margin: 24px auto;
@@ -147,11 +255,23 @@
 </head>
 <body>
 
-  <!-- 頂部導覽 -->
+<!-- 頂部導覽列 -->
   <header>
     <div class="brand-title">板橋自強里 💧 氣候變遷社區調適計畫</div>
-    <a href="index.html" class="back-btn">🗺️ 返回飲水地圖</a>
+    <a href="#" class="back-btn">返回飲水地圖</a>
   </header>
+
+  <main>
+    <!-- 👇 圖片就在這裡 (第 106 行) 👇 -->
+    <section class="card">
+      <div class="card-title">
+        <span>🗺️</span> 自強里社區調適與飲水資源地圖
+      </div>
+      <div class="map-image-wrapper">
+        <img src="自強里飲水地圖ver2.png" alt="自強里社區調適地圖" class="map-image">
+      </div>
+      <p class="map-note">※ 本圖標示自強里各公共補水站與友善奉茶點。</p>
+    </section>
 
   <div class="container">
     
