@@ -70,18 +70,34 @@
       padding-bottom: 8px;
     }
 
-    /* 💡 新增的靜態地圖專用樣式 */
+    /* 💡 靜態地圖專用容器（置中且限制高度，避免長圖爆版） */
     .map-img-box {
       width: 100%;
       border-radius: 8px;
       overflow: hidden;
       border: 1px solid #e2e8f0;
-      background-color: #f1f5f9;
+      background-color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 12px;
+    }
+    .map-img-box a {
+      display: inline-block;
+      text-align: center;
     }
     .map-img-box img {
-      display: block;
-      width: 100%;
+      max-width: 100%;
+      max-height: 520px;
+      width: auto;
       height: auto;
+      object-fit: contain;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      transition: transform 0.2s;
+    }
+    .map-img-box img:hover {
+      transform: scale(1.01);
     }
     .map-note {
       margin-top: 8px;
@@ -109,7 +125,7 @@
       margin-bottom: 6px;
     }
 
-    /* 活動照片展示網格（解決照片變超大的關鍵樣式） */
+    /* 活動照片展示網格 */
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -175,14 +191,15 @@
 
   <div class="container">
     
-    <!-- 🗺️ 最上方的新增照片/地圖區塊（在此放入你的圖片檔名） -->
+    <!-- 🗺️ 最上方的地圖區塊 -->
     <section class="card">
       <h2>🗺️ 自強里社區調適與飲水資源地圖</h2>
       <div class="map-img-box">
-        <!-- 請將 map.png 換成你的地圖圖片檔名 -->
-        <img src="自強里飲水地圖ver2.png" alt="自強里飲水與調適資源地圖">
+        <a href="自強里飲水地圖ver2.png" target="_blank" title="點擊檢視原圖">
+          <img src="自強里飲水地圖ver2.png" alt="自強里飲水與調適資源地圖">
+        </a>
       </div>
-      <p class="map-note">※ 本圖標示里內公共飲水點與調適巡檢點位。</p>
+      <p class="map-note">※ 本圖標示里內公共飲水點與調適巡檢點位（可點擊圖片放大檢視）。</p>
     </section>
 
     <!-- 計畫理念與緣起 -->
@@ -215,8 +232,7 @@
 
       <div class="gallery-grid">
         <div class="gallery-card">
-          <!-- 請確認圖片檔名是否符合你的原始設定 -->
-          <img src="photo1.jpg" alt="孳生源教材展示">
+          <img src="photo01.jpg" alt="孳生源教材展示">
           <div class="gallery-caption">
             <b>📍 孳生源教材展示</b>
             以芝麻和人工容器製作孳生源教材，讓社區居民模擬巡檢孳生源。
@@ -224,7 +240,7 @@
         </div>
 
         <div class="gallery-card">
-          <img src="photo2.jpg" alt="巡倒清「刷」">
+          <img src="photo02.jpg" alt="巡倒清「刷」">
           <div class="gallery-caption">
             <b>📍 巡倒清「刷」</b>
             菜瓜布刷學生源水桶，都在刷什麼？——巡倒清刷之實務操作。
@@ -232,7 +248,7 @@
         </div>
 
         <div class="gallery-card">
-          <img src="photo3.jpg" alt="工作坊合照">
+          <img src="photo03.jpg" alt="工作坊合照">
           <div class="gallery-caption">
             <b>📍 氣候變遷風險社區調適實務工作坊合照</b>
             與里民一同展示成功刷洗的孳生源容器。
